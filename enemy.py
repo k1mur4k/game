@@ -99,13 +99,13 @@ class Enemy(pygame.sprite.Sprite):
         else:
             self.image.set_alpha(0)
     
-    def update(self):
-        self.move()
+    def update(self):# スプライトの状態を更新するメソッド
+        self.move()# 移動メソッドを呼び出す
         self.shoot()
-        self.check_off_screen()
-        self.animation()
-        self.collision_bullet()
-        self.check_death()
+        self.check_off_screen()# 画面外チェックを行う
+        self.animation() # アニメーションを更新する
+        self.collision_bullet()# 弾との衝突をチェックする
+        self.check_death()# 死亡をチェックする
         
-        self.explosion_group.draw(self.screen)
-        self.explosion_group.update()
+        self.explosion_group.draw(self.screen)# 爆発グループを画面に描画する
+        self.explosion_group.update() # 爆発グループを更新する
