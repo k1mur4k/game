@@ -2,7 +2,7 @@
 
 ## python&pygameインストール手順
 ## 1.以下のURLよりpythonをダウンロードする
-`https://www.python.org/downloads/`  
+(https://www.python.org/downloads/)  
 **インストール画面でADD Python.exe to PATHとUse admin pricileges when installing py.exeにチェックを入れる**  
 ## 2.VSCodeにPythonのパスを設定する
 ### 1.VSCodeを開き、コマンドパレット(ctrl+Shift+Pでも可)を開く。
