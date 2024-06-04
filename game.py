@@ -30,6 +30,7 @@ class Game:
         # ゲーム開始時間
         self.start_time = time.time()
         self.end_time = None  # ゲーム終了時間
+        self.clear_time = None  # ゲームクリア時間
         
         # ボスフラグ
         self.boss_spawned = False
@@ -70,6 +71,7 @@ class Game:
             self.game_clear = False
             self.start_time = time.time()  # ゲーム開始時間をリセット
             self.end_time = None  # ゲーム終了時間をリセット
+            self.clear_time = None  # ゲームクリア時間をリセット
             self.boss_spawned = False
             self.score = 0  # スコアをリセット
     
