@@ -14,6 +14,11 @@ class Game:
         self.player = Player(self.player_group, 300, 500, self.enemy_group)
         self.timer = 0
         
+        # BGM（特にいいBGMがありませんでした）
+        pygame.mixer.music.load('assets/sound/bgm.mp3')
+        pygame.mixer.music.play(-1)
+        pygame.mixer.music.set_volume(0.3)
+        
         # 背景
         self.pre_bg_img = pygame.image.load('assets/img/background/bg.png')
         self.bg_img = pygame.transform.scale(self.pre_bg_img, (screen_width, screen_height))
