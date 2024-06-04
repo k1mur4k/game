@@ -1,89 +1,117 @@
-import pygame  
-from setting import *  
-from player import Player  
-from enemy import Enemy  
-import random  
-from support import draw_text  
+import pygame
+import time  # timeモジュールをインポート
+from setting import *
+from player import Player
+from enemy import Enemy
+from boss import Boss  # Bossクラスをインポート
+import random
+from support import draw_text
 
 class Game:
-
     def __init__(self):
-        self.screen = pygame.display.get_surface()  # ゲームのメインスクリーンを取得
-
-        # グループの作成
+        self.screen = pygame.display.get_surface()
         self.create_group()
-
-        # 自機
-        self.player = Player(self.player_group, 300, 500, self.enemy_group)  # プレイヤーを初期位置に配置
-
-        # 敵
-        self.timer = 0  # 敵生成のタイマー
-
+        self.player = Player(self.player_group, 300, 500, self.enemy_group)
+        self.timer = 0
+        
         # 背景
-        self.pre_bg_img = pygame.image.load('assets/img/background/bg.png')  # 背景画像をロード
-        self.bg_img = pygame.transform.scale(self.pre_bg_img, (screen_width, screen_height))  # 画面サイズに合わせてスケール
-        self.bg_y = 0  # 背景のy座標
-        self.scroll_speed = 0.5  # 背景スクロールの速度
-
-        # ゲームオーバー
-        self.game_over = False  # ゲームオーバーフラグ
-
-        # BGM（いいBGMがあれば）
-        # pygame.mixer.music.load('assets/sound/bgm.mp3')
-        # pygame.mixer.music.play(-1)
-        # pygame.mixer.music.set_volume(0.3)
-
+        self.pre_bg_img = pygame.image.load('assets/img/background/bg.png')
+        self.bg_img = pygame.transform.scale(self.pre_bg_img, (screen_width, screen_height))
+        self.bg_y = 0
+        self.scroll_speed = 0.5
+        
+        # ゲームオーバーとゲームクリア
+        self.game_over = False
+        self.game_clear = False
+        
         # スコア
-        self.score = 0  # スコアを管理する変数を追加
-
+        self.score = 0
+        
+        # ゲーム開始時間
+        self.start_time = time.time()
+        self.end_time = None  # ゲーム終了時間
+        
+        # ボスフラグ
+        self.boss_spawned = False
+    
     def create_group(self):
-        self.player_group = pygame.sprite.GroupSingle()  # プレイヤー用のグループ
-        self.enemy_group = pygame.sprite.Group()  # 敵用のグループ
-
+        self.player_group = pygame.sprite.GroupSingle()
+        self.enemy_group = pygame.sprite.Group()
+        self.enemy_bullet_group = pygame.sprite.Group()
+        self.boss_group = pygame.sprite.Group()  # ボスグループを追加
+    
     def create_enemy(self):
-        self.timer += 1  # タイマーをインクリメント
-        if self.timer > 30:  # 50フレームごとに
-            enemy = Enemy(self.enemy_group, random.randint(50, 550), 0, self.player.bullet_group,self)  # ランダムな位置に敵を生成
-            self.timer = 0  # タイマーをリセット
-
+        self.timer += 1
+        if self.timer > 50:
+            enemy = Enemy(self.enemy_group, random.randint(50, 550), 0, self.enemy_bullet_group, self)
+            self.timer = 0
+    
+    def create_boss(self):
+        boss = Boss(self.boss_group, screen_width // 2, 100, self.enemy_bullet_group, self)
+        self.boss_spawned = True
+    
     def player_death(self):
-        if len(self.player_group) == 0:  # プレイヤーグループが空の場合
-            self.game_over = True  # ゲームオーバーフラグをTrueに設定
-            draw_text(self.screen, 'game over', screen_width // 2, screen_height //2, 75, RED)  # ゲームオーバーテキストを表示
-            draw_text(self.screen, 'press SPACE KEY to reset', screen_width//2, screen_height//2 + 100, 50, RED)  # リセット指示テキストを表示
-
+        if not self.game_over:  # 初回のみゲームオーバー時間を記録
+            self.end_time = time.time()
+            self.game_over = True
+        draw_text(self.screen, 'YOU DIED', screen_width // 2, screen_height // 2, 75, RED)
+        draw_text(self.screen, 'Press SPACE KEY to reset', screen_width // 2, screen_height // 2 + 100, 50, RED)
+        elapsed_time = self.end_time - self.start_time
+        draw_text(self.screen, f'Time: {elapsed_time:.2f} seconds', screen_width // 2, screen_height // 2 + 150, 50, WHITE)
+    
     def reset(self):
-        key = pygame.key.get_pressed()  # キーボードの状態を取得
-        if self.game_over and key[pygame.K_SPACE]:  # ゲームオーバー状態でスペースキーが押された場合
-            self.player = Player(self.player_group, 300, 500, self.enemy_group)  # プレイヤーを再生成
-            self.enemy_group.empty()  # 敵グループを空にする
-            self.game_over = False  # ゲームオーバーフラグをFalseに設定
+        key = pygame.key.get_pressed()
+        if (self.game_over or self.game_clear) and key[pygame.K_SPACE]:
+            self.player = Player(self.player_group, 300, 500, self.enemy_group)
+            self.enemy_group.empty()
+            self.enemy_bullet_group.empty()
+            self.boss_group.empty()  # ボスグループをクリア
+            self.game_over = False
+            self.game_clear = False
+            self.start_time = time.time()  # ゲーム開始時間をリセット
+            self.end_time = None  # ゲーム終了時間をリセット
+            self.boss_spawned = False
             self.score = 0  # スコアをリセット
-
-    # 画像のスクロール
+    
     def scroll_bg(self):
-        # ここで速度を変更できる
-        self.bg_y = (self.bg_y + self.scroll_speed) % screen_height  # 背景をスクロール
-        self.screen.blit(self.bg_img, (0, self.bg_y - screen_height))  # 背景を描画（ラップアラウンド）
-        self.screen.blit(self.bg_img, (0, self.bg_y))  # 背景を描画
-
+        self.bg_y = (self.bg_y + self.scroll_speed) % screen_height
+        self.screen.blit(self.bg_img, (0, self.bg_y - screen_height))
+        self.screen.blit(self.bg_img, (0, self.bg_y))
+    
     def run(self):
-        self.scroll_bg()  # 背景をスクロール
+        self.scroll_bg()
+        if not self.game_over and not self.game_clear:
+            if not self.boss_spawned and self.score >= 1000:  # スコアが1000に達したらボスを生成
+                self.create_boss()
+            if not self.boss_spawned:
+                self.create_enemy()
+            
+            self.player_group.update()
+            self.enemy_group.update()
+            self.enemy_bullet_group.update()
+            self.boss_group.update()
+            
+            # プレイヤーが敵の弾に当たったかどうかをチェック
+            for bullet in self.enemy_bullet_group:
+                if self.player.rect.colliderect(bullet.rect):
+                    bullet.kill()
+                    self.player.health -= 1
+                    if self.player.health <= 0:
+                        self.player_death()
+        
+        self.player_group.draw(self.screen)
+        self.enemy_group.draw(self.screen)
+        self.enemy_bullet_group.draw(self.screen)
+        self.boss_group.draw(self.screen)  # ボスグループを描画
 
-        self.create_enemy()  # 敵を生成
+        if self.game_clear:
+            if self.clear_time is None:
+                self.clear_time = time.time() - self.start_time  # ゲームクリア時の経過時間を記録
+            draw_text(self.screen, 'GAME CLEAR', screen_width // 2, screen_height // 2, 75, GREEN)
+            draw_text(self.screen, 'Press SPACE KEY to reset', screen_width // 2, screen_height // 2 + 100, 50, GREEN)
+            draw_text(self.screen, f'Time: {self.clear_time:.2f} seconds', screen_width // 2, screen_height // 2 + 150, 50, WHITE)
 
-        self.player_death()  # プレイヤーの死亡チェック
-        self.reset()  # ゲームのリセット
+        if self.game_over:
+            self.player_death()
 
-        # グループの描画と更新
-        self.player_group.draw(self.screen)  # プレイヤーグループを描画
-        self.player_group.update()  # プレイヤーグループを更新
-        self.enemy_group.draw(self.screen)  # 敵グループを描画
-        self.enemy_group.update()  # 敵グループを更新
-
-        # スコアの表示
-        font = pygame.font.Font(None, 36)
-        score_text = font.render(f'Score: {self.score}', True, (255, 255, 255))
-        self.screen.blit(score_text, (10, 10))
-
-        # print(self.enemy_group)  # 敵グループのデバッグ出力（コメントアウト）
+        self.reset()
