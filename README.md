@@ -27,3 +27,7 @@ python -v
 pip install pygame
 ```
 を入力するとインストール可能
+
+boss.pyのLine.17にあるパスの  
+boss.pngをboss2.pngかboss3.pngに変えると  
+ボスの画像が変わります
